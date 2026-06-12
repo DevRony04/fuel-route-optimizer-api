@@ -1,0 +1,109 @@
+{
+	"info": {
+		"_postman_id": "c1f7a26f-cf3e-4d5c-9c98-1e428c0b2401",
+		"name": "Fuel Route Optimizer API",
+		"description": "API collection to test the Fuel Route Optimizer backend assessment API.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Optimize Route (New York to Los Angeles)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"start\": \"New York, NY\",\n    \"finish\": \"Los Angeles, CA\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/v1/optimize-route/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"optimize-route",
+						""
+					]
+				},
+				"description": "Calculate optimal fuel stops between NY and LA."
+			},
+			"response": []
+		},
+		{
+			"name": "Optimize Route - Geocoding Error",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"start\": \"InvalidCityXYZ123\",\n    \"finish\": \"Los Angeles, CA\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/v1/optimize-route/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"optimize-route",
+						""
+					]
+				},
+				"description": "Trigger geocoding validation error by sending an invalid start location name."
+			},
+			"response": []
+		},
+		{
+			"name": "Optimize Route - Validation Error",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"start\": \"New York, NY\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/v1/optimize-route/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"optimize-route",
+						""
+					]
+				},
+				"description": "Trigger parameter validation error by omitting the required 'finish' parameter."
+			},
+			"response": []
+		}
+	]
+}

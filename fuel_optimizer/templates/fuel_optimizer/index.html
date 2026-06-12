@@ -1,0 +1,221 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fuel Route Optimizer Dashboard</title>
+    <meta name="description" content="Calculate and visualize the most cost-efficient refueling stops along a driving route in the USA. Minimize fuel costs using real-time database pricing.">
+    
+    <!-- Google Fonts: Outfit and Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'fuel_optimizer/css/styles.css' %}">
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        <!-- Top Navigation / Header -->
+        <header class="app-header">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 10V18C19 19.6569 17.6569 21 16 21H8C6.34315 21 5 19.6569 5 18V6C5 4.34315 6.34315 3 8 3H13M19 10C19 8.9 18.1 8 17 8H16.5V6.5C16.5 5.12 15.38 4 14 4H13.5M19 10V10.5C20.1 10.5 21 11.4 21 12.5V17C21 17.83 20.33 18.5 19.5 18.5C18.67 18.5 18 17.83 18 17V13.5M9 8H12M9 11H12M9 14H12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h1>Fuel Route <span>Optimizer</span></h1>
+            </div>
+            <p class="tagline">USA Logistics Cost Optimization Engine</p>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="app-main">
+            <!-- Left Panel: Input & Analytics -->
+            <section class="left-panel">
+                <!-- Card 1: Route Input Panel -->
+                <div class="card glass-card input-card">
+                    <div class="card-header">
+                        <h2>Configure Route</h2>
+                        <p>Enter your origin and destination in the USA</p>
+                    </div>
+                    
+                    <form id="route-form" class="route-form">
+                        <div class="form-group">
+                            <label for="start-input">Origin Location</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                </span>
+                                <input type="text" id="start-input" name="start" placeholder="e.g. New York, NY" required autocomplete="off">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="finish-input">Destination Location</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/>
+                                    </svg>
+                                </span>
+                                <input type="text" id="finish-input" name="finish" placeholder="e.g. Los Angeles, CA" required autocomplete="off">
+                            </div>
+                        </div>
+
+                        <div class="quick-examples">
+                            <span class="label">Quick Presets:</span>
+                            <button type="button" class="btn-preset" data-start="New York, NY" data-finish="Los Angeles, CA">NY to LA</button>
+                            <button type="button" class="btn-preset" data-start="Chicago, IL" data-finish="Houston, TX">Chicago to Houston</button>
+                            <button type="button" class="btn-preset" data-start="Seattle, WA" data-finish="Miami, FL">Seattle to Miami</button>
+                        </div>
+
+                        <button type="submit" id="submit-btn" class="btn btn-primary">
+                            <span class="btn-text">Optimize Fuel Stops</span>
+                            <div class="spinner-small hidden"></div>
+                        </button>
+                    </form>
+                    
+                    <div id="error-message" class="error-banner hidden">
+                        <span class="error-icon">!</span>
+                        <p id="error-text"></p>
+                    </div>
+                </div>
+
+                <!-- Card 2: Summary Stats Dashboard -->
+                <div class="card glass-card metrics-card hidden" id="metrics-panel">
+                    <div class="card-header">
+                        <h2>Trip Optimization Summary</h2>
+                        <p>Estimated logistics calculations</p>
+                    </div>
+                    <div class="metrics-grid">
+                        <div class="metric-box">
+                            <span class="metric-label">Total Distance</span>
+                            <span class="metric-value" id="val-distance">-</span>
+                            <span class="metric-unit">miles</span>
+                        </div>
+                        <div class="metric-box accent-box">
+                            <span class="metric-label">Total Fuel Cost</span>
+                            <span class="metric-value" id="val-cost">-</span>
+                            <span class="metric-unit">USD</span>
+                        </div>
+                        <div class="metric-box">
+                            <span class="metric-label">Drive Duration</span>
+                            <span class="metric-value" id="val-duration">-</span>
+                            <span class="metric-unit">hours</span>
+                        </div>
+                        <div class="metric-box">
+                            <span class="metric-label">Fuel Required</span>
+                            <span class="metric-value" id="val-fuel">-</span>
+                            <span class="metric-unit">gallons</span>
+                        </div>
+                        <div class="metric-box">
+                            <span class="metric-label">Fuel Stops</span>
+                            <span class="metric-value" id="val-stops">-</span>
+                            <span class="metric-unit">stops</span>
+                        </div>
+                        <div class="metric-box">
+                            <span class="metric-label">Avg. Price / Gal</span>
+                            <span class="metric-value" id="val-avg-price">-</span>
+                            <span class="metric-unit">USD</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Map & Route Visualization -->
+            <section class="right-panel">
+                <!-- Map Card -->
+                <div class="card glass-card map-card">
+                    <div class="card-header flex-header">
+                        <div>
+                            <h2>Interactive Route Map</h2>
+                            <p>Visual path with cheapest stations in the 5-mile corridor</p>
+                        </div>
+                        <div class="map-legend">
+                            <span class="legend-item"><span class="legend-dot start"></span> Start</span>
+                            <span class="legend-item"><span class="legend-dot finish"></span> Finish</span>
+                            <span class="legend-item"><span class="legend-dot stop"></span> Fuel Stop</span>
+                        </div>
+                    </div>
+                    <div class="map-container-wrapper">
+                        <div id="map" class="route-map"></div>
+                        <div id="map-loader" class="map-overlay hidden">
+                            <div class="spinner-large"></div>
+                            <p>Calculating route projection and optimal stops...</p>
+                        </div>
+                        <div id="map-placeholder" class="map-placeholder-text">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/>
+                                <line x1="9" y1="3" x2="9" y2="18"/>
+                                <line x1="15" y1="6" x2="15" y2="21"/>
+                            </svg>
+                            <p>Enter a route configuration to view coordinates projection</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom Panel: Detailed Table & Analytics Charts -->
+        <section class="bottom-panel hidden" id="details-panel">
+            <div class="bottom-grid">
+                <!-- Detailed Fuel Stops Table -->
+                <div class="card glass-card table-card">
+                    <div class="card-header">
+                        <h2>Optimal Refueling Plan</h2>
+                        <p>Sequential schedule to buy fuel at lowest corridor price</p>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="stops-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Station Name</th>
+                                    <th>Location</th>
+                                    <th>Retail Price</th>
+                                    <th>Fuel to Purchase</th>
+                                    <th>Cost</th>
+                                    <th>Distance Run</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stops-table-body">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Cost Accumulation Chart -->
+                <div class="card glass-card chart-card">
+                    <div class="card-header">
+                        <h2>Cumulative Cost Curve</h2>
+                        <p>Fuel cost scaling along travel path (miles)</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="cost-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <footer class="app-footer">
+            <p>Built with Django, Pandas, NumPy, and Leaflet. Optimized using Greedydown Downstream Selection.</p>
+        </footer>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="{% static 'fuel_optimizer/js/app.js' %}"></script>
+</body>
+</html>
