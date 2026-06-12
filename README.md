@@ -190,3 +190,24 @@ coverage run --source='fuel_optimizer' manage.py test fuel_optimizer
 coverage report
 ```
 The codebase maintains over **91% test coverage**.
+
+---
+
+## 🎥 Project Demonstration Video
+
+A complete end-to-end walkthrough of the Fuel Route Optimizer API, including system architecture, optimization algorithm, API testing, Docker deployment, and interactive dashboard demonstration, is available below:
+
+🔗 **Loom Video Demo:**
+https://www.loom.com/share/bdd13116d1314d529484ed4ac65307b0
+
+### Demo Highlights
+
+* Fuel route optimization between USA locations
+* Cost-effective fuel stop selection
+* Interactive route visualization dashboard
+* Refueling plan generation
+* REST API walkthrough
+* Dockerized deployment
+* Codebase and architecture explanation
+
+This video demonstrates the complete functionality and implementation details of the project.
